@@ -1,0 +1,33 @@
+version: "3.7"
+services:
+  analyzer-worker:
+    image: analyzer
+    depends_on:
+      - redis
+    entrypoint: 'celery'
+    command: ['worker', '--app=analyzer', '--loglevel=INFO']
+    environment:
+      - CELERY_BROKER_URL=redis://redis/0
+    volumes:
+      - ./:/usr/app/
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - ./docker/volumes/redis-data:/data
+    ports:
+      - '127.0.0.1:6379:6379'
+
+  analyzer-script:
+    image: analyzer
+    depends_on:
+      - redis
+    entrypoint: '/bin/bash'
+    stdin_open: true
+    tty: true
+    environment:
+      - COLUMNS=80
+      - CELERY_BROKER_URL=redis://redis/0
+    volumes:
+      - ./:/usr/app/
+
